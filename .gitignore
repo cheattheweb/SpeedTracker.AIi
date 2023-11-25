@@ -1,0 +1,6 @@
+database.db
+/.idea/
+/env/
+/src/__pycache__/
+/wiegths/
+```
