@@ -6,8 +6,9 @@ from object_tacker import*
 import time
 from math import dist
 from count_fps import *
+from sqlite import *
 
-model=YOLO('../wiegths/yolov8s.pt')
+model=YOLO('../wiegths/yolov8n.pt')
 
 video_path = '../videos/jp_road.mp4'
 time_per_frame = calculate_frame_time(video_path)
@@ -22,6 +23,9 @@ def RGB(event, x, y, flags, param):
 
 cv2.namedWindow('RGB')
 #cv2.setMouseCallback('RGB', RGB)
+
+conn = create_connection()
+create_table(conn)
 
 cap=cv2.VideoCapture(video_path)
 
@@ -51,9 +55,9 @@ while True:
     if not ret:
         break
     count += 1
-    #if count % 3 != 0:
+    #if count % 2 != 0:
     #    continue
-    frame=cv2.resize(frame,(1020,500))
+    frame=cv2.resize(frame,(1020, 500))
    
 
     results=model.predict(frame)
@@ -72,6 +76,7 @@ while True:
         y2=int(row[3])
         d=int(row[5])
         c=class_list[d]
+        #print(c)
         if 'car' in c or 'truck' in c or 'bus' in c:
             list.append([x1,y1,x2,y2])
     bbox_id=tracker.update(list)
@@ -81,7 +86,6 @@ while True:
         cy=int(y3+y4)//2
         
         cv2.rectangle(frame,(x3,y3),(x4,y4),(0,0,255),2)
-        
 
         if cy1<(cy+offset) and cy1 > (cy-offset):
            vh_down[id]= count
@@ -100,6 +104,15 @@ while True:
                 cv2.putText(frame,str(id),(x3,y3),cv2.FONT_HERSHEY_COMPLEX,0.6,(255,255,255),1)
                 cv2.putText(frame,str(int(a_speed_kh))+'Km/h',(x4,y4 ),cv2.FONT_HERSHEY_COMPLEX,0.8,(0,255,255),2)
 
+                # inset data into database
+                if a_speed_kh > 10:
+
+                    is_success, buffer = cv2.imencode(".jpg", frame)
+                    if is_success:
+                        image_data = np.array(buffer).tostring()
+                        data = (time.strftime("%Y-%m-%d %H:%M:%S"), int(a_speed_kh), str(id), image_data)
+                        insert_data(conn, data)
+
         #####going UP#####     
         if cy2<(cy+offset) and cy2 > (cy-offset):
            vh_up[id]=count
@@ -107,11 +120,9 @@ while True:
         if id in vh_up:
 
            if cy1<(cy+offset) and cy1 > (cy-offset):
-                    elapsed_frame1 = count - vh_up[id]
-                    print(elapsed1_frame)
-                    elapsed1_time= elapsed1_frame * time_per_frame
+                    elapsed1_time= (count - vh_up[id]) * time_per_frame
+                    print(elapsed1_time)
                     if counter1.count(id)==0:
-
                         counter1.append(id)
                         distance1 = 10 # meters
                         a_speed_ms1 = distance1 / elapsed1_time
@@ -120,14 +131,22 @@ while True:
                         cv2.putText(frame,str(id),(x3,y3),cv2.FONT_HERSHEY_COMPLEX,0.6,(255,255,255),1)
                         cv2.putText(frame,str(int(a_speed_kh1))+'Km/h',(x4,y4),cv2.FONT_HERSHEY_COMPLEX,0.8,(0,255,255),2)
 
+                        if a_speed_kh > 10:
+
+                            is_success, buffer = cv2.imencode(".jpg", frame)
+                            if is_success:
+                                image_data = np.array(buffer).tostring()
+                                data = (time.strftime("%Y-%m-%d %H:%M:%S"), int(a_speed_kh), str(id), image_data)
+                                insert_data(conn, data)
+
            
 
-    cv2.line(frame,(274,cy1),(814,cy1),(255,255,255),1)
+    cv2.line(frame,(208,cy1),(814,cy1),(255,255,255),1)
 
     cv2.putText(frame,('L1'),(277,320),cv2.FONT_HERSHEY_COMPLEX,0.8,(0,255,255),2)
 
 
-    cv2.line(frame,(177,cy2),(927,cy2),(255,255,255),1)
+    cv2.line(frame,(97,cy2),(927,cy2),(255,255,255),1)
  
     cv2.putText(frame,('L2'),(182,367),cv2.FONT_HERSHEY_COMPLEX,0.8,(0,255,255),2)
 
