@@ -4,9 +4,10 @@ import numpy as np
 from ultralytics import YOLO
 from object_tacker import*
 import time
-from math import dist
 from count_fps import *
 from sqlite import *
+from notify_kdeconnect import *
+
 
 model=YOLO('../wiegths/yolov8n.pt')
 
@@ -105,13 +106,17 @@ while True:
                 cv2.putText(frame,str(int(a_speed_kh))+'Km/h',(x4,y4 ),cv2.FONT_HERSHEY_COMPLEX,0.8,(0,255,255),2)
 
                 # inset data into database
-                if a_speed_kh > 10:
+                if a_speed_kh > 60:
 
                     is_success, buffer = cv2.imencode(".jpg", frame)
                     if is_success:
                         image_data = np.array(buffer).tostring()
                         data = (time.strftime("%Y-%m-%d %H:%M:%S"), int(a_speed_kh), str(id), image_data)
                         insert_data(conn, data)
+
+                    # send notification
+                    notify = f"SpeedTackerAi_{id},_at_{a_speed_kh}_km/h.pdf"
+                    send_kdeconnect_notification(frame, a_speed_kh, "a9901dfa_80fd_4073_b56c_f439efcaa841", notify)
 
         #####going UP#####     
         if cy2<(cy+offset) and cy2 > (cy-offset):
@@ -131,13 +136,16 @@ while True:
                         cv2.putText(frame,str(id),(x3,y3),cv2.FONT_HERSHEY_COMPLEX,0.6,(255,255,255),1)
                         cv2.putText(frame,str(int(a_speed_kh1))+'Km/h',(x4,y4),cv2.FONT_HERSHEY_COMPLEX,0.8,(0,255,255),2)
 
-                        if a_speed_kh > 10:
+                        if a_speed_kh > 60:
 
                             is_success, buffer = cv2.imencode(".jpg", frame)
                             if is_success:
                                 image_data = np.array(buffer).tostring()
                                 data = (time.strftime("%Y-%m-%d %H:%M:%S"), int(a_speed_kh), str(id), image_data)
                                 insert_data(conn, data)
+
+                            # send notification
+                            send_kdeconnect_notification(frame, a_speed_kh, "a9901dfa_80fd_4073_b56c_f439efcaa841")
 
            
 

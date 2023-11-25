@@ -3,4 +3,7 @@ database.db
 /env/
 /src/__pycache__/
 /wiegths/
+/src/frame.jpg
+/src/info.txt
+/src/speedTrackerAi.pdf
 ```
