@@ -22,7 +22,7 @@ def RGB(event, x, y, flags, param):
         print(colorsBGR)
         
 
-cv2.namedWindow('RGB')
+cv2.namedWindow('Speed Tacker Ai')
 #cv2.setMouseCallback('RGB', RGB)
 
 conn = create_connection()
@@ -115,8 +115,7 @@ while True:
                         insert_data(conn, data)
 
                     # send notification
-                    notify = f"SpeedTackerAi_{id},_at_{a_speed_kh}_km/h.pdf"
-                    send_kdeconnect_notification(frame, a_speed_kh, "a9901dfa_80fd_4073_b56c_f439efcaa841", notify)
+                    send_kdeconnect_notification(frame, a_speed_kh, "a9901dfa_80fd_4073_b56c_f439efcaa841")
 
         #####going UP#####     
         if cy2<(cy+offset) and cy2 > (cy-offset):
