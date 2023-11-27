@@ -2,7 +2,7 @@ import cv2
 import pandas as pd
 import numpy as np
 from ultralytics import YOLO
-from object_tacker import*
+from object_tracker import*
 import time
 from count_fps import *
 from sqlite import *
@@ -11,7 +11,7 @@ from notify_kdeconnect import *
 
 model=YOLO('../wiegths/yolov8n.pt')
 
-video_path = '../videos/jp_road.mp4'
+video_path = '../videos/gec2.mp4'
 time_per_frame = calculate_frame_time(video_path)
 print("time per fame = ", time_per_frame)
 
@@ -39,8 +39,8 @@ count=0
 
 tracker=Tracker()
 
-cy1=322
-cy2=368
+cy1=425
+cy2=525
 
 offset=6
 
@@ -58,7 +58,7 @@ while True:
     count += 1
     #if count % 2 != 0:
     #    continue
-    frame=cv2.resize(frame,(1020, 500))
+    frame=cv2.resize(frame,(1280, 720))
    
 
     results=model.predict(frame)
@@ -78,7 +78,7 @@ while True:
         d=int(row[5])
         c=class_list[d]
         #print(c)
-        if 'car' in c or 'truck' in c or 'bus' in c:
+        if 'car' in c or 'truck' in c or 'bus' in c or 'motorcycle' in c or 'bicycle' in c:
             list.append([x1,y1,x2,y2])
     bbox_id=tracker.update(list)
     for bbox in bbox_id:
@@ -98,7 +98,7 @@ while True:
              print(elapsed_time)
              if counter.count(id)==0:
                 counter.append(id)
-                distance = 10 # meters
+                distance =  7# meters
                 a_speed_ms = distance / elapsed_time
                 a_speed_kh = a_speed_ms * 3.6
                 cv2.circle(frame,(cx,cy),4,(0,0,255),-1)
@@ -128,23 +128,23 @@ while True:
                     print(elapsed1_time)
                     if counter1.count(id)==0:
                         counter1.append(id)
-                        distance1 = 10 # meters
+                        distance1 = 7 # meters
                         a_speed_ms1 = distance1 / elapsed1_time
                         a_speed_kh1 = a_speed_ms1 * 3.6
                         cv2.circle(frame,(cx,cy),4,(0,0,255),-1)
                         cv2.putText(frame,str(id),(x3,y3),cv2.FONT_HERSHEY_COMPLEX,0.6,(255,255,255),1)
                         cv2.putText(frame,str(int(a_speed_kh1))+'Km/h',(x4,y4),cv2.FONT_HERSHEY_COMPLEX,0.8,(0,255,255),2)
 
-                        if a_speed_kh > 60:
+                        if a_speed_kh1 > 60:
 
                             is_success, buffer = cv2.imencode(".jpg", frame)
                             if is_success:
                                 image_data = np.array(buffer).tostring()
-                                data = (time.strftime("%Y-%m-%d %H:%M:%S"), int(a_speed_kh), str(id), image_data)
+                                data = (time.strftime("%Y-%m-%d %H:%M:%S"), int(a_speed_kh1), str(id), image_data)
                                 insert_data(conn, data)
 
                             # send notification
-                            send_kdeconnect_notification(frame, a_speed_kh, "a9901dfa_80fd_4073_b56c_f439efcaa841")
+                            send_kdeconnect_notification(frame, a_speed_kh1, "a9901dfa_80fd_4073_b56c_f439efcaa841")
 
            
 
@@ -158,7 +158,7 @@ while True:
     cv2.putText(frame,('L2'),(182,367),cv2.FONT_HERSHEY_COMPLEX,0.8,(0,255,255),2)
 
     cv2.imshow("RGB", frame)
-    if cv2.waitKey(1)&0xFF==ord("q"):
+    if cv2.waitKey(0)&0xFF==ord("q"):
         break
 cap.release()
 cv2.destroyAllWindows()
